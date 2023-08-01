@@ -1,28 +1,28 @@
 import password_processing
 import password_access
 import password_generator
-import pathlib
 import os
 from getpass import getpass
 
 
 def user_menu():
-    menu = int(input("Press 1 for saving a password, 2 for reading a password, 3 to generate one, 4 to delete one, 5 "
-                     "for settings or 6 to quit: "))
+    menu = int(input("Press 1 for saving a password, 2 for reading a password, 3 to generate one, 4 to delete one or 6 to quit: "))
 
-    match menu:
-        case 1:
-            user_save_password()
-        case 2:
-            user_read_password()
-        case 3:
-            user_generate_password()
-        case 4:
-            user_delete_password()
-        case 5:
-            user_settings()
-        case _:
-            exit(0)
+    if menu == 1:
+        user_save_password()
+    elif menu == 2:
+        user_read_password()
+    elif menu == 3:
+        user_generate_password()
+    elif menu == 4:
+        user_delete_password()
+    elif menu == "yes":
+        # TODO Add Multi users!!
+        user_settings()
+    elif menu == 5:
+        exit(0)
+    else:
+        exit(0)
 
 
 def user_generate_password():
@@ -70,8 +70,8 @@ def user_read_password():
     for file in os.listdir(f"{password_access.userpath}/passwords/"):
         if file.endswith(".passfile"):
             index += 1
-            name = file.strip('passfile')
-            print(f"{index}. {(name.strip('.'))}")
+            name = file.split('.')
+            print(f"{index}. {name[0]}")
     choice = input("Name of the password (Ensure it's the same as shown!): ")
     choice_pass = password_access.read_password(choice)
     print("Password details:")
@@ -115,8 +115,8 @@ def user_delete_password():
     for file in os.listdir(f"{password_access.userpath}/passwords/"):
         if file.endswith(".passfile"):
             index += 1
-            name = file.strip('passfile')
-            print(f"{index}. {(name.strip('.'))}")
+            name = file.split('.')
+            print(f"{index}. {name[0]}")
     choice = input("Name of the password (Ensure it's the same as shown!): ")
     if input(f"Are you sure you want to delete {choice}? (y/n): ").lower() == "y":
         os.remove(f"{choice}.passfile")
@@ -127,12 +127,13 @@ def user_delete_password():
 if __name__ == "__main__":
 
     if not os.path.isfile("pass.hash"):
-        print(
-            "Enter your username and password. You will need to remember these to see your other passwords saved or you won't be able to!")
         try:
-            os.mkdir("/passwords/")
+            os.mkdir(f"{password_access.userpath}/passwords/")
         except:
             pass
+        print(
+            "Enter your username and password. You will need to remember these to see your other passwords saved or you won't be able to!")
+        
 
     result = ""
     while not result == "Access granted!" or result is None:

@@ -34,7 +34,7 @@ def save_password(_name, _webpage, _username, _password):
 
 
 def read_password(_name):
-    fernet = Fernet(gen_fernet_key(password_processing.user_details.encode("utf-8")))
+    fernet_k = Fernet(gen_fernet_key(password_processing.user_details.encode("utf-8")))
 
     with open(f"{userpath}/passwords/{_name}.data", "r") as f:
         website = f.readline()
@@ -44,8 +44,8 @@ def read_password(_name):
         data = file.readlines()
         file.close()
 
-    username = (fernet.decrypt(data[0].strip("\n").encode())).decode()
-    password = (fernet.decrypt(data[1].encode())).decode()
+    username = (fernet_k.decrypt(data[0].strip("\n").encode())).decode()
+    password = (fernet_k.decrypt(data[1].encode())).decode()
 
     return {
         "name": _name,
