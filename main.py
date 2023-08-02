@@ -1,3 +1,4 @@
+import random
 import password_processing
 import password_access
 import password_generator
@@ -6,11 +7,18 @@ from getpass import getpass
 import requests
 import json
 import time
-from datetime import timedelta, timezone, datetime
+from datetime import timedelta, datetime
+import sys
+
+
+def cls():
+    os.system('cls' if os.name == 'nt' else 'clear')
 
 
 def user_menu():
-    menu = int(input("Press 1 for saving a password, 2 for reading a password, 3 to generate one, 4 to delete one or 6 to quit: "))
+    cls()
+    menu = int(input(
+        "Press 1 for saving a password, 2 for reading a password, 3 to generate one, 4 to delete one or 6 to quit: "))
 
     if menu == 1:
         user_save_password()
@@ -24,9 +32,9 @@ def user_menu():
         # TODO Add Multi users!!
         user_settings()
     elif menu == 5:
-        exit(0)
+        sys.exit()
     else:
-        exit(0)
+        sys.exit()
 
 
 def user_generate_password():
@@ -45,9 +53,13 @@ def save_generated_password(__password):
     if input("1 to continue, 2 to go back: ") == "1":
         name = input("Name of the password: ")
         website = input("Website where the password is used: ")
-        _username = input("Username used with the password: ")
-        password_access.save_password(name, website, _username, __password)
-        print("Password saved successfully!")
+        email = input("Would you like a temporal email?(y/n)").lower()
+        if email == "y":
+            generate_email(name, website, __password)
+        else:
+            _username = input("Username used with the password: ")
+            password_access.save_password(name, website, _username, __password)
+            print("Password saved successfully!")
 
     else:
         user_menu()
@@ -72,7 +84,7 @@ def user_read_password():
     print("Currently saved passwords: ")
     index = 0
     for file in os.listdir(f"{password_access.userpath}/passwords/"):
-        if os.listdir(f"{password_access.userpath}/passwords/") == []:
+        if not os.listdir(f"{password_access.userpath}/passwords/"):
             print("There aren't any saved passwords. Returning to menu!")
             user_menu()
         if file.endswith(".passfile"):
@@ -130,35 +142,56 @@ def user_delete_password():
         os.remove(f"{choice}.data")
         print(f"{choice} removed successfully!")
 
-def generate_email():
+
+def generate_email(_name, _website, _password):
+    old = True
+
     prefix = "https://www.1secmail.com/api/v1/"
-    getmessage = "?action=getMessages"
-    readMessage = "?action=readMessage"
-    login = "password_manager"
+    get_message = "?action=getMessages"
+    read_message = "?action=readMessage"
+    login = list(username)
+    random.shuffle(login)
+    login = "".join(login)
     domain = "1secmail.com"
     print(f"Email is: {login}@{domain}")
+    print("You will now be able to read any message that enters this temporal inbox. It will update every 5 seconds.")
     data = []
-    emailids = []
+    email_ids = []
     loops = 0
-    while data == [] or not old:
-        data = json.loads(requests.get(f"{prefix}{getmessage}&login={login}&domain={domain}").text)
-        email_time = datetime.strptime(data[0]['date'], "%Y-%m-%d %H:%M:%S")
-        time.sleep(5)
-        if email_time < (datetime.now().replace(microsecond=0)) - timedelta(minutes=5):
-            old = True
+    while old:
+
+        if input("Are you waiting for a code? (y/n): ").lower() == "y":
+            data = json.loads(requests.get(f"{prefix}{get_message}&login={login}&domain={domain}").text)
+            if data:
+                email_time = datetime.strptime(data[0]['date'], "%Y-%m-%d %H:%M:%S")
+                time.sleep(5)
+                if email_time < (datetime.now().replace(microsecond=0)) - timedelta(minutes=10):
+                    old = True
+            else:
+                time.sleep(5)
+                print("No E-Mails received!")
+
+        else:
+            print("Saving password data...")
+            password_access.save_password(_name, _website, f"{login}@{domain}", _password)
+            time.sleep(1)
+            print("Saved!")
+            user_menu()
+
     for item in data:
-        emailids.append(item["id"])
-    print(emailids)
-    for emailid in emailids:
-        email = requests.get(f"{prefix}{readMessage}&login={login}&domain={domain}&id={emailid}")
+        email_ids.append(item["id"])
+    for email_id in email_ids:
+        email = requests.get(f"{prefix}{read_message}&login={login}&domain={domain}&id={email_id}")
 
         verif = json.loads(email.text)
         print(f"Last email sent to this address was from {email_time}:")
         print(verif['textBody'])
+    password_access.save_password(_name, _website, f"{login}@{domain}", _password)
+    print("Password saved with that email!")
+
+
 if __name__ == "__main__":
-
-    generate_email()
-
+    cls()
     if not os.path.isfile("pass.hash"):
         try:
             os.mkdir(f"{password_access.userpath}/passwords/")
@@ -166,14 +199,13 @@ if __name__ == "__main__":
             pass
         print(
             "Enter your username and password. You will need to remember these to see your other passwords saved or you won't be able to!")
-        
 
     result = ""
     while not result == "Access granted!" or result is None:
         username = input("Username: ")
         password = getpass()
         result = password_processing.password_check(username, password)
-        
+
         if result is None:
             print("Saved your Password!")
         else:

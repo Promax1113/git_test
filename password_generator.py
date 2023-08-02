@@ -1,4 +1,3 @@
-# importing the random and string
 import random
 import string
 
