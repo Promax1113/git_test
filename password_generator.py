@@ -36,4 +36,3 @@ def generate_password():
     symbols = ["!", "@", "?", "&", "£", "#", "_", "-", "*", "%", "$", "/", "(", ")", "="]
 
     return password_output(characters_check(characters), numbers_check(numbers), symbols_check(symbols))
-

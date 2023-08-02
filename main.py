@@ -3,6 +3,10 @@ import password_access
 import password_generator
 import os
 from getpass import getpass
+import requests
+import json
+import time
+from datetime import timedelta, timezone, datetime
 
 
 def user_menu():
@@ -68,6 +72,9 @@ def user_read_password():
     print("Currently saved passwords: ")
     index = 0
     for file in os.listdir(f"{password_access.userpath}/passwords/"):
+        if os.listdir(f"{password_access.userpath}/passwords/") == []:
+            print("There aren't any saved passwords. Returning to menu!")
+            user_menu()
         if file.endswith(".passfile"):
             index += 1
             name = file.split('.')
@@ -123,8 +130,34 @@ def user_delete_password():
         os.remove(f"{choice}.data")
         print(f"{choice} removed successfully!")
 
+def generate_email():
+    prefix = "https://www.1secmail.com/api/v1/"
+    getmessage = "?action=getMessages"
+    readMessage = "?action=readMessage"
+    login = "password_manager"
+    domain = "1secmail.com"
+    print(f"Email is: {login}@{domain}")
+    data = []
+    emailids = []
+    loops = 0
+    while data == [] or not old:
+        data = json.loads(requests.get(f"{prefix}{getmessage}&login={login}&domain={domain}").text)
+        email_time = datetime.strptime(data[0]['date'], "%Y-%m-%d %H:%M:%S")
+        time.sleep(5)
+        if email_time < (datetime.now().replace(microsecond=0)) - timedelta(minutes=5):
+            old = True
+    for item in data:
+        emailids.append(item["id"])
+    print(emailids)
+    for emailid in emailids:
+        email = requests.get(f"{prefix}{readMessage}&login={login}&domain={domain}&id={emailid}")
 
+        verif = json.loads(email.text)
+        print(f"Last email sent to this address was from {email_time}:")
+        print(verif['textBody'])
 if __name__ == "__main__":
+
+    generate_email()
 
     if not os.path.isfile("pass.hash"):
         try:
@@ -140,7 +173,7 @@ if __name__ == "__main__":
         username = input("Username: ")
         password = getpass()
         result = password_processing.password_check(username, password)
-
+        
         if result is None:
             print("Saved your Password!")
         else:
