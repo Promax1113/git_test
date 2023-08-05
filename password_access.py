@@ -1,8 +1,10 @@
-import password_processing
-import pathlib
 import base64
 import hashlib
+import pathlib
+
 from fernet import Fernet
+
+import password_processing
 
 userpath = pathlib.Path(__name__).parent.resolve()
 
@@ -27,8 +29,8 @@ def save_password(_name, _webpage, _username, _password):
         file.write(b"\n")
         file.write(f.encrypt(bytes(_password, 'utf-8')))
         file.close()
-    with open(f"{userpath}/passwords/{_name}.data", "w") as file:
-        file.write(_webpage)
+    with open(f"{userpath}/passwords/{_name}.data", "wb") as file:
+        file.write(f.encrypt(bytes(_webpage, 'utf-8')))
 
     password_processing.passwords.append(password)
 
@@ -44,12 +46,13 @@ def read_password(_name):
         data = file.readlines()
         file.close()
 
+    webpage = (fernet_k.decrypt(website.encode())).decode()
     username = (fernet_k.decrypt(data[0].strip("\n").encode())).decode()
     password = (fernet_k.decrypt(data[1].encode())).decode()
 
     return {
         "name": _name,
-        "website": website,
+        "website": webpage,
         "username": username,
         "password": password
     }

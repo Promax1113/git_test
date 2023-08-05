@@ -1,6 +1,5 @@
 import json
 import os
-import random
 import shutil
 import sys
 import textwrap
@@ -70,7 +69,7 @@ def user_save_password():
     print("Now you're gonna need to input some login details for the website.")
     if input("1 to continue, 2 to go back: ") == "1":
 
-        name = input("Name of the password file (not the password): ").capitalize()
+        name = input("Name of the password file (not the password): ")
         website = input("Website where the password is used: ")
         _username = input("Username used with the password: ")
         _password = getpass("Password used with the username: ")
@@ -153,35 +152,38 @@ def generate_email(_name, _website, _password):
     prefix = "https://www.1secmail.com/api/v1/"
     get_message = "?action=getMessages"
     read_message = "?action=readMessage"
-    login = list(username)
-    random.shuffle(login)
-    login = "".join(login)
-    domain = "1secmail.com"
-    print(f"Email is: {login}@{domain}")
+    email = "?action=genRandomMailbox&count=1"
+    email_addressl = json.loads(requests.get(f"{prefix}{email}").text)
+    email_address = email_addressl[0]
+    email_address = email_address.split("@")
+    login, domain = email_address[0], email_address[1]
+    print(f"Your email is: {email_addressl[0]}")
     print(textwrap.fill(
         "You will now be able to read any message that enters this temporal inbox. It will update every 5 seconds.",
         width=shutil.get_terminal_size().columns))
     data = []
     email_ids = []
-    while old:
-
-        if input("Are you waiting for a code? (y/n): ").lower() == "y":
+    if input("Are you waiting for a code? (y/n): ").lower() == "y":
+        while old:
             data = json.loads(requests.get(f"{prefix}{get_message}&login={login}&domain={domain}").text)
             if data:
                 email_time = datetime.strptime(data[0]['date'], "%Y-%m-%d %H:%M:%S")
                 time.sleep(5)
-                if email_time < (datetime.now().replace(microsecond=0)) - timedelta(minutes=10):
-                    old = True
+                print(f"Last email sent to this address was from {email_time}:")
+
+                if email_time > (datetime.now().replace(microsecond=0)) - timedelta(minutes=10):
+                    old = False
+
             else:
                 time.sleep(5)
                 print("No E-Mails received!")
 
-        else:
-            print("Saving password data...")
-            password_access.save_password(_name, _website, f"{login}@{domain}", _password)
-            time.sleep(1)
-            print("Saved!")
-            user_menu()
+    else:
+        print("Saving password data...")
+        password_access.save_password(_name, _website, f"{login}@{domain}", _password)
+        time.sleep(1)
+        print("Saved!")
+        user_menu()
 
     for item in data:
         email_ids.append(item["id"])
@@ -189,9 +191,10 @@ def generate_email(_name, _website, _password):
         email = requests.get(f"{prefix}{read_message}&login={login}&domain={domain}&id={email_id}")
 
         verif = json.loads(email.text)
-        print(f"Last email sent to this address was from {email_time}:")
-        print(verif['textBody'])
+        print(f"Code: {verif['textBody']}")
+        time.sleep(10)
     password_access.save_password(_name, _website, f"{login}@{domain}", _password)
+    time.sleep(2.5)
     print("Password saved with that email!")
 
 

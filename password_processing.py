@@ -1,7 +1,6 @@
 import hashlib
 import os
-import random
-import string
+
 
 class Password:
 
@@ -18,11 +17,10 @@ user_details = ""
 
 
 def password_check(username, password):
-    salt = random.choices(string.ascii_letters, k=5)
     if os.path.isfile("pass.hash"):
         global user_details
         pass_user = username + password
-        pass_user_hash = hashlib.sha256(bytes(pass_user + salt, "utf-8"))
+        pass_user_hash = hashlib.sha256(bytes(pass_user, "utf-8"))
         user_details = pass_user
 
         with open("pass.hash", "r") as f:
