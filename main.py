@@ -1,24 +1,24 @@
-import random
-import password_processing
-import password_access
-import password_generator
-import os
-from getpass import getpass
-import requests
 import json
+import os
+import random
+import shutil
+import sys
+import textwrap
 import time
 from datetime import timedelta, datetime
-import sys
+from getpass import getpass
 
+import requests
 
-def cls():
-    os.system('cls' if os.name == 'nt' else 'clear')
+import password_access
+import password_generator
+import password_processing
 
 
 def user_menu():
-    cls()
-    menu = int(input(
-        "Press 1 for saving a password, 2 for reading a password, 3 to generate one, 4 to delete one or 6 to quit: "))
+    menu = int(input(textwrap.fill(
+        "Press 1 for saving a password, 2 for reading a password, 3 to generate one, 4 to delete one or 5 to quit: ",
+        width=shutil.get_terminal_size().columns)))
 
     if menu == 1:
         user_save_password()
@@ -34,7 +34,8 @@ def user_menu():
     elif menu == 5:
         sys.exit()
     else:
-        sys.exit()
+        print("\nInvalid option!\n")
+        user_menu()
 
 
 def user_generate_password():
@@ -51,9 +52,9 @@ def user_generate_password():
 def save_generated_password(__password):
     print("Now you're gonna need to input some login details for the website.")
     if input("1 to continue, 2 to go back: ") == "1":
-        name = input("Name of the password: ")
+        name = input("Name of the password file (not the password): ")
         website = input("Website where the password is used: ")
-        email = input("Would you like a temporal email?(y/n)").lower()
+        email = input("Would you like a temporal email?(y/n): ").lower()
         if email == "y":
             generate_email(name, website, __password)
         else:
@@ -69,7 +70,7 @@ def user_save_password():
     print("Now you're gonna need to input some login details for the website.")
     if input("1 to continue, 2 to go back: ") == "1":
 
-        name = input("Name of the password: ").capitalize()
+        name = input("Name of the password file (not the password): ").capitalize()
         website = input("Website where the password is used: ")
         _username = input("Username used with the password: ")
         _password = getpass("Password used with the username: ")
@@ -83,10 +84,12 @@ def user_save_password():
 def user_read_password():
     print("Currently saved passwords: ")
     index = 0
+    if not os.listdir(f"{password_access.userpath}/passwords/"):
+        print("There aren't any saved passwords. Returning to menu!")
+
+        user_menu()
     for file in os.listdir(f"{password_access.userpath}/passwords/"):
-        if not os.listdir(f"{password_access.userpath}/passwords/"):
-            print("There aren't any saved passwords. Returning to menu!")
-            user_menu()
+
         if file.endswith(".passfile"):
             index += 1
             name = file.split('.')
@@ -144,6 +147,7 @@ def user_delete_password():
 
 
 def generate_email(_name, _website, _password):
+    email_time = datetime.now()
     old = True
 
     prefix = "https://www.1secmail.com/api/v1/"
@@ -154,10 +158,11 @@ def generate_email(_name, _website, _password):
     login = "".join(login)
     domain = "1secmail.com"
     print(f"Email is: {login}@{domain}")
-    print("You will now be able to read any message that enters this temporal inbox. It will update every 5 seconds.")
+    print(textwrap.fill(
+        "You will now be able to read any message that enters this temporal inbox. It will update every 5 seconds.",
+        width=shutil.get_terminal_size().columns))
     data = []
     email_ids = []
-    loops = 0
     while old:
 
         if input("Are you waiting for a code? (y/n): ").lower() == "y":
@@ -191,23 +196,28 @@ def generate_email(_name, _website, _password):
 
 
 if __name__ == "__main__":
-    cls()
+
     if not os.path.isfile("pass.hash"):
         try:
             os.mkdir(f"{password_access.userpath}/passwords/")
-        except:
+        finally:
             pass
+
         print(
             "Enter your username and password. You will need to remember these to see your other passwords saved or you won't be able to!")
 
     result = ""
     while not result == "Access granted!" or result is None:
         username = input("Username: ")
+        while " " in username:
+            print("Username cannot contain spaces!")
+            username = input("Username: ")
         password = getpass()
         result = password_processing.password_check(username, password)
 
         if result is None:
             print("Saved your Password!")
+            user_menu()
         else:
             print(result)
     user_menu()
