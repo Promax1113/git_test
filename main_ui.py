@@ -1,14 +1,20 @@
-import os
+import os,pathlib
 import time
 from markupsafe import escape
-from flask import Flask, request, redirect, render_template
+from flask import Flask, request, redirect, render_template, session
+from flask_session import Session
 
 import password_processing
 import password_access
 
-app = Flask(__name__)
 
-name = os.getlogin()
+pathlib.Path.mkdir(pathlib.Path(f"{password_access.userpath}/passwords"), exist_ok=True)
+
+
+app = Flask(__name__)
+app.config["SESSION_PERMANENT"] = False
+app.config["SESSION_TYPE"] = "filesystem"
+Session(app)
 
 error = None
 password = None
@@ -31,7 +37,7 @@ def process_login():
     username = request.form['ffx']
     password = request.form['ffl']
     result = password_processing.password_check(username, password)
-    if result == "Access granted!":
+    if result == "Access granted!" or None:
         return redirect('/overview')
     return f"<h2>Result: {escape(result)}</h2>"
 
@@ -46,6 +52,7 @@ def get_password():
     global error
     global password
     name = request.form['name']
+    session['name'] = name
     password = password_access.read_password(name)
     error = password
     print(password)
