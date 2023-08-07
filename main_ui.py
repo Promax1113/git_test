@@ -1,48 +1,68 @@
 import os
-
-import ttkbootstrap as tkb
+import time
+from markupsafe import escape
+from flask import Flask, request, redirect, render_template
 
 import password_processing
+import password_access
+
+app = Flask(__name__)
+
+name = os.getlogin()
+
+error = None
+password = None
+
+@app.route("/")
+def goto_login():
+    return redirect("/login")
 
 
-def change_label():
-    username = username_field.get()
-    password = password_field.get()
+@app.get("/login")
+def hello_world():
+    return render_template('login.html')
+
+
+@app.post("/login")
+def process_login():
+    result = None
+    username = None
+    password = None
+    username = request.form['ffx']
+    password = request.form['ffl']
     result = password_processing.password_check(username, password)
-    if result is None:
-        result = "Saved Password!"
-
-    label1["text"] = f"Result: {result}"
-
-
-def first_time():
-    if not os.path.isfile("pass.hash"):
-        label1["text"] = "Enter the password and username you want to use."
-    # TODO Display message the first time
+    if result == "Access granted!":
+        return redirect('/overview')
+    return f"<h2>Result: {escape(result)}</h2>"
 
 
-if __name__ == "__main__":
-    labeltext = ""
+@app.get("/overview")
+def menu():
+    return render_template('index.html')
 
-    window = tkb.Window(title="Program", themename="flatly", minsize=[960, 540])
 
-    window.bind("<Return>", change_label)
+@app.post("/overview")
+def get_password():
+    global error
+    global password
+    name = request.form['name']
+    password = password_access.read_password(name)
+    error = password
+    print(password)
+    if password == "Invalid Login! You did not login!":
+        return redirect('/invalid')
+    else:
+        return redirect('/details')
 
-    label1 = tkb.Label(window, text=labeltext)
-    first_time()
+@app.get("/invalid")
+def invalid_menu():
+    return render_template('invalid.html', name = error)
 
-    username_label = tkb.Label(window, text="Username:")
-    username_field = tkb.Entry(window)
-    password_label = tkb.Label(window, text="Password:")
-    password_field = tkb.Entry(window)
-    button = tkb.Button(window, text="window", command=change_label)
+@app.post("/invalid")
+def process_invalid():
+    return redirect("/login")
 
-    label1.pack()
-    username_label.pack()
-    username_field.pack()
-    password_label.pack()
-    password_field.pack()
-
-    button.pack()
-
-    window.mainloop()
+@app.get("/details")
+def get_password_details():
+    print(password)
+    return render_template('password.html', name = password['name'], pass_details = password)

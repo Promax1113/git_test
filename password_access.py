@@ -1,7 +1,7 @@
 import base64
 import hashlib
 import pathlib
-
+import os
 from fernet import Fernet
 
 import password_processing
@@ -36,6 +36,10 @@ def save_password(_name, _webpage, _username, _password):
 
 
 def read_password(_name):
+
+    if not os.path.isfile(f"{userpath}/passwords/{_name}.passfile"):
+        return "File not found!"
+
     fernet_k = Fernet(gen_fernet_key(password_processing.user_details.encode("utf-8")))
 
     with open(f"{userpath}/passwords/{_name}.data", "r") as f:
@@ -45,10 +49,13 @@ def read_password(_name):
     with open(f"{userpath}/passwords/{_name}.passfile", "r") as file:
         data = file.readlines()
         file.close()
+    try:
+        webpage = (fernet_k.decrypt(website.encode())).decode()
+        username = (fernet_k.decrypt(data[0].strip("\n").encode())).decode()
+        password = (fernet_k.decrypt(data[1].encode())).decode()
+    except:
+        return "Invalid Login! You did not login!"
 
-    webpage = (fernet_k.decrypt(website.encode())).decode()
-    username = (fernet_k.decrypt(data[0].strip("\n").encode())).decode()
-    password = (fernet_k.decrypt(data[1].encode())).decode()
 
     return {
         "name": _name,

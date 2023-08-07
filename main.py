@@ -15,9 +15,15 @@ import password_processing
 
 
 def user_menu():
-    menu = int(input(textwrap.fill(
-        "Press 1 for saving a password, 2 for reading a password, 3 to generate one, 4 to delete one or 5 to quit: ",
-        width=shutil.get_terminal_size().columns)))
+    menu = "a"
+    try:
+        menu = int(input(textwrap.fill(
+            "Press 1 for saving a password, 2 for reading a password, 3 to generate one, 4 to delete one or 5 to quit: ",
+            width=shutil.get_terminal_size().columns)))
+    except:
+
+        print("\nBad choice, try again!\n")
+        user_menu()
 
     if menu == 1:
         user_save_password()
@@ -28,7 +34,7 @@ def user_menu():
     elif menu == 4:
         user_delete_password()
     elif menu == "yes":
-        # TODO Add Multi users!!
+        # TODO: Add Multi users!!
         user_settings()
     elif menu == 5:
         sys.exit()
@@ -52,8 +58,11 @@ def save_generated_password(__password):
     print("Now you're gonna need to input some login details for the website.")
     if input("1 to continue, 2 to go back: ") == "1":
         name = input("Name of the password file (not the password): ")
+        if name == __password:
+            print("\nInvalid Password name, cannot be the same as password.\n")
+            save_generated_password(__password)
         website = input("Website where the password is used: ")
-        email = input("Would you like a temporal email?(y/n): ").lower()
+        email = input("Would you like a temporal email? (y/n): ").lower()
         if email == "y":
             generate_email(name, website, __password)
         else:
@@ -73,6 +82,10 @@ def user_save_password():
         website = input("Website where the password is used: ")
         _username = input("Username used with the password: ")
         _password = getpass("Password used with the username: ")
+        if _password in name and password == name:
+            print("\nInvalid Password name, cannot be the same as password.\n")
+
+            user_save_password()
         password_access.save_password(name, website, _username, _password)
         print("Password saved successfully!")
         user_menu()
@@ -81,8 +94,8 @@ def user_save_password():
 
 
 def user_read_password():
-    print("Currently saved passwords: ")
     index = 0
+    print("Currently saved passwords: ")
     if not os.listdir(f"{password_access.userpath}/passwords/"):
         print("There aren't any saved passwords. Returning to menu!")
 
@@ -133,6 +146,10 @@ def user_settings():
 def user_delete_password():
     print("Currently saved passwords: ")
     index = 0
+    if not os.listdir(f"{password_access.userpath}/passwords/"):
+        print("There aren't any saved passwords. Returning to menu!")
+
+        user_menu()
     for file in os.listdir(f"{password_access.userpath}/passwords/"):
         if file.endswith(".passfile"):
             index += 1
@@ -146,18 +163,17 @@ def user_delete_password():
 
 
 def generate_email(_name, _website, _password):
-    email_time = datetime.now()
     old = True
 
     prefix = "https://www.1secmail.com/api/v1/"
     get_message = "?action=getMessages"
     read_message = "?action=readMessage"
     email = "?action=genRandomMailbox&count=1"
-    email_addressl = json.loads(requests.get(f"{prefix}{email}").text)
-    email_address = email_addressl[0]
+    email_address_json = json.loads(requests.get(f"{prefix}{email}").text)
+    email_address = email_address_json[0]
     email_address = email_address.split("@")
     login, domain = email_address[0], email_address[1]
-    print(f"Your email is: {email_addressl[0]}")
+    print(f"Your email is: {email_address_json[0]}")
     print(textwrap.fill(
         "You will now be able to read any message that enters this temporal inbox. It will update every 5 seconds.",
         width=shutil.get_terminal_size().columns))
