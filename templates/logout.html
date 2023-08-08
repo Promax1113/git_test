@@ -2,14 +2,13 @@
 <html lang="en">
 <head>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/master.css') }}">
-
     <meta charset="UTF-8">
-    <title>{{ name }}</title>
+    <title>Document</title>
 </head>
 <body>
-  <h1>{{ pass_details }}</h1>
-  <form action="{{ url_for('menu') }}" method="get">
-    <button type="submit" name="button">Go back</button>
-  </form>
+    <h1>Logged in as {{ logout_data }}</h1>
+    <form method="post">
+      <button type="submit" name="logout" value="submit">Log out.</button>
+    </form>
 </body>
 </html>

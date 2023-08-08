@@ -1,14 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/master.css') }}">
+
     <meta charset="UTF-8">
     <title>Login</title>
 </head>
 <body>
 <form method="POST">
-    Username:<br><input type="text" name="ffx" autocomplete="off"><br>
-    Password:<br><input type="password" name="ffl"><br>
-    <input type="submit" value="Submit"></form>
+    Username:<br><input type="text" name="ffx" autocomplete="off" required><br>
+    Password:<br><input type="password" name="ffl" required><br>
+ 
+
+    <button class="button" type="submit" value="Submit">Login</form>
 
 </body>
 </html>

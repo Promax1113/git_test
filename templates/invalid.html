@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/master.css') }}">
     <meta charset="UTF-8">
     <title>{{ name }}</title>
 </head>
@@ -10,7 +11,7 @@
       {% if name == "Invalid Login! You did not login!" %}
         <form action="{{ url_for('goto_login') }}"><button type="submit" name="button" value="submit">Go to Login</button>
       {% elif name == "File not found!" %}
-        <form action="{{ url_for('overview') }}"><button type="submit" name="button" value="submit">Go to overview</button>
+        <form action="{{ url_for('menu') }}"><button type="submit" name="button" value="submit">Go to overview</button>
       {% endif %}
   {% else %}
     <h1>You shouldn't be seeing this error page!</h1>

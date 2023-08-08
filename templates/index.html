@@ -1,13 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/master.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap" rel="stylesheet">
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Overview</title>
 </head>
 <body>
-<form method="post"
-  Username:<br><input type="text" name="name"><br>
-  <button type="submit" value="submit">Get password!</button>
-</form>
+
+  {% if session['name'] %}
+    <h1 class="heading" >Overview</h1>
+    <h3>Logged in as: {{ session['name'] }}</h3>
+    <form method="post" action='{{ url_for("logout_page") }}'>
+      <button class="button" type="submit" name="logout" value="submit">Log out</button>
+    </form>
+
+
+
+    {% if passlist != [] %}
+    <div class="container">
+      {% for item in passlist: %}
+
+
+          <div class="item">
+            {{ item['id'] }}. {{ item['name'] }}
+            <div class="item-bg"></div>
+          </div>
+
+        {% endfor %}
+      </div>
+
+        <form method="post"
+          Username:<br><input type="text" name="name"><br>
+          <button class="button" type="submit" value="submit">Get password!</button>
+          </form>
+    {% else %}
+      <h4>No saved passwords!</h4>
+    {% endif %}
+  {% else %}
+    <h1>You are not logged in!</h1>
+    <form action="{{ url_for('hello_world') }}" method="get">
+      <button class="button" type="submit" name="button">Login</button>
+    </form>
+    {% endif %}
+
+
 </body>
 </html>
