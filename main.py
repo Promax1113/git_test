@@ -1,13 +1,14 @@
+import requests
+from datetime import timedelta, datetime
+
 import json
 import os
 import shutil
 import sys
 import textwrap
 import time
-from datetime import timedelta, datetime
 from getpass import getpass
 
-import requests
 
 import password_access
 import password_generator
@@ -57,7 +58,7 @@ def user_generate_password():
 def save_generated_password(__password):
     print("Now you're gonna need to input some login details for the website.")
     if input("1 to continue, 2 to go back: ") == "1":
-        name = input("Name of the password file (not the password): ")
+        name = input("Name of the password file (not the password): ").lower()
         if name == __password:
             print("\nInvalid Password name, cannot be the same as password.\n")
             save_generated_password(__password)
@@ -78,12 +79,13 @@ def user_save_password():
     print("Now you're gonna need to input some login details for the website.")
     if input("1 to continue, 2 to go back: ") == "1":
 
-        name = input("Name of the password file (not the password): ")
+        name = input("Name of the password file (not the password): ").lower()
         website = input("Website where the password is used: ")
         _username = input("Username used with the password: ")
         _password = getpass("Password used with the username: ")
-        if _password in name and password == name:
+        if _password in name and _password == name:
             print("\nInvalid Password name, cannot be the same as password.\n")
+            print("\nPassword was NOT saved!!\n")
 
             user_save_password()
         password_access.save_password(name, website, _username, _password)
@@ -94,11 +96,11 @@ def user_save_password():
 
 
 def user_read_password():
+    print("\nCurrently saved passwords: ")
     index = 0
-    print("Currently saved passwords: ")
     if not os.listdir(f"{password_access.userpath}/passwords/"):
-        print("There aren't any saved passwords. Returning to menu!")
-
+        print("There aren't any saved passwords. Returning to menu!\n")
+        time.sleep(1.5)
         user_menu()
     for file in os.listdir(f"{password_access.userpath}/passwords/"):
 
@@ -106,18 +108,21 @@ def user_read_password():
             index += 1
             name = file.split('.')
             print(f"{index}. {name[0]}")
-    choice = input("Name of the password (Ensure it's the same as shown!): ")
+    choice = input("Name of the password (Ensure it's the same as shown!): ").lower()
     choice_pass = password_access.read_password(choice)
-    print("Password details:")
-    print(
-        f"Name: {choice_pass['name']},"
-        f" Website: {choice_pass['website']},"
-        f" Username: {choice_pass['username']},"
-        f" Password: {choice_pass['password']}"
-    )
+    if choice_pass == "File not found!":
+        print("\nFile not found!\n")
+    else:
+        print("Password details:")
+        print(
+              f"\nName: {choice_pass['name']},"
+              f" Website: {choice_pass['website']},"
+              f" Username: {choice_pass['username']},"
+              f" Password: {choice_pass['password']}\n"
+              )
     user_menu()
 
-
+# deprecated
 def user_settings():
     global username
     global password
@@ -144,22 +149,32 @@ def user_settings():
 
 
 def user_delete_password():
-    print("Currently saved passwords: ")
+    print("\nCurrently saved passwords: ")
     index = 0
     if not os.listdir(f"{password_access.userpath}/passwords/"):
-        print("There aren't any saved passwords. Returning to menu!")
-
+        print("There aren't any saved passwords. Returning to menu!\n")
+        time.sleep(1.5)
         user_menu()
     for file in os.listdir(f"{password_access.userpath}/passwords/"):
         if file.endswith(".passfile"):
             index += 1
             name = file.split('.')
             print(f"{index}. {name[0]}")
-    choice = input("Name of the password (Ensure it's the same as shown!): ")
-    if input(f"Are you sure you want to delete {choice}? (y/n): ").lower() == "y":
-        os.remove(f"{choice}.passfile")
-        os.remove(f"{choice}.data")
-        print(f"{choice} removed successfully!")
+    choice = input("Name of the password (Ensure it's the same as shown!): ").lower()
+    if f"{choice}.passfile" not in os.listdir(f"{password_access.userpath}/passwords/"):
+        print("\nFile not found!\n")
+        user_menu()
+    else:
+        if input(f"Are you sure you want to delete {choice}? (y/n): ").lower() == "y":
+            os.remove(f"{password_access.userpath}/passwords/{choice}.passfile")
+            os.remove(f"{password_access.userpath}/passwords/{choice}.data")
+            print(f"{choice} removed successfully!")
+            user_menu()
+        else:
+            print("\nNothing was deleted!\n")
+            time.sleep(1)
+            user_menu()
+
 
 
 def generate_email(_name, _website, _password):
@@ -185,7 +200,7 @@ def generate_email(_name, _website, _password):
             if data:
                 email_time = datetime.strptime(data[0]['date'], "%Y-%m-%d %H:%M:%S")
                 time.sleep(5)
-                print(f"Last email sent to this address was from {email_time}:")
+                print(f"Last email sent to this address was from {email_time} and from {data[0]['from']}: ")
 
                 if email_time > (datetime.now().replace(microsecond=0)) - timedelta(minutes=10):
                     old = False
