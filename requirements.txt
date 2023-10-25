@@ -18,5 +18,5 @@ pytz==2023.3
 requests==2.31.0
 ttkbootstrap==1.10.1
 urllib3==2.0.6
-Werkzeug==2.3.7
+Werkzeug==3.0.1
 zope.interface==6.0
